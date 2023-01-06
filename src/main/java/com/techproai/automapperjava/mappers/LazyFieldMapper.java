@@ -1,6 +1,7 @@
 package com.techproai.automapperjava.mappers;
 
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
+import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.options.MapperOpts;
@@ -8,17 +9,17 @@ import com.techproai.automapperjava.pools.TypeConverterPool;
 
 import java.lang.reflect.Field;
 
-public class SimpleFieldMapper implements FieldMapper {
+public class LazyFieldMapper implements FieldMapper {
     private final Field inputField;
     private final Field outputField;
     private final MapperOpts mapperOpts;
     private final TypeConverterPool typeConverterPool;
 
-    public SimpleFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
+    public LazyFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
         this(in, out, typeConverterPool, MapperOpts.DEFAULT);
     }
 
-    public SimpleFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool, MapperOpts mapperOpts) {
+    public LazyFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool, MapperOpts mapperOpts) {
         this.inputField = in;
         this.outputField = out;
         this.typeConverterPool = typeConverterPool;
@@ -31,7 +32,6 @@ public class SimpleFieldMapper implements FieldMapper {
         assert outputObject != null;
         inputField.setAccessible(true);
         outputField.setAccessible(true);
-
         try {
             Object inputValue = this.inputField.get(inputObject);
 
@@ -48,12 +48,14 @@ public class SimpleFieldMapper implements FieldMapper {
             TypeConverter typeConverter = typeConverterPool.get(inputField.getType().getName(), outputField.getType().getName());
 
             if (typeConverter == null) {
-                throw new NoTypeConverterFoundException(inputField.getType().getName(), outputField.getType().getName());
+                typeConverter = new LazyObjectConverter(inputField.getType(), outputField.getType(), typeConverterPool);
             }
 
             Object outputValue = typeConverter.convert(inputValue);
             outputField.set(outputObject, outputValue);
         } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoZeroArgumentsConstructorFoundException e) {
             e.printStackTrace();
         }
     }

@@ -1,10 +1,8 @@
 package com.techproai.automapperjava;
 
-import com.techproai.automapperjava.converters.SimpleObjectConverter;
 import com.techproai.automapperjava.exceptions.AutoMapperException;
-import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.pools.TypeConverterPool;
-import com.techproai.automapperjava.utils.AutoMapperUtils;
+import com.techproai.automapperjava.utils.LazyAutoMapperUtils;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-public class AutoMapperTests {
+public class LazyAutoMapperTests {
     @Test
     public void test1() throws AutoMapperException {
         TypeConverterPool typeConverterPool = new TypeConverterPool();
@@ -27,22 +25,7 @@ public class AutoMapperTests {
         typeConverterPool.add(String.class, Long.class, x -> x == null ? null : Long.parseLong(x));
         typeConverterPool.add(String.class, Double.class, x -> x == null ? null : Double.parseDouble(x));
 
-        TypeConverter<Test1, Test2> soc12 = new SimpleObjectConverter<>(Test1.class, Test2.class, typeConverterPool);
-        typeConverterPool.add(Test1.class, Test2.class, x -> soc12.convert(x));
-
-        TypeConverter<Test1, Test3> soc13 = new SimpleObjectConverter<>(Test1.class, Test3.class, typeConverterPool);
-        typeConverterPool.add(Test1.class, Test3.class, x -> soc13.convert(x));
-
-        TypeConverter<Test4, Test5> soc45 = new SimpleObjectConverter<>(Test4.class, Test5.class, typeConverterPool);
-        typeConverterPool.add(Test4.class, Test5.class, x -> soc45.convert(x));
-
-        TypeConverter<Test6, Test7> soc67 = new SimpleObjectConverter<>(Test6.class, Test7.class, typeConverterPool);
-        typeConverterPool.add(Test6.class, Test7.class, x -> soc67.convert(x));
-
-        TypeConverter<Test8, Test9> soc89 = new SimpleObjectConverter<>(Test8.class, Test9.class, typeConverterPool);
-        typeConverterPool.add(Test8.class, Test9.class, x -> soc89.convert(x));
-
-        AutoMapperUtils autoMapperUtils = new AutoMapperUtils(typeConverterPool);
+        LazyAutoMapperUtils autoMapperUtils = new LazyAutoMapperUtils(typeConverterPool);
 
         Test1 test1 = new Test1();
         test1.setAge(10);
@@ -90,5 +73,6 @@ public class AutoMapperTests {
                 .getTest4()
                 .getTest1()
                 .getName() == 10;
+        System.out.println(autoMapperUtils);
     }
 }

@@ -1,6 +1,7 @@
 package com.techproai.automapperjava.mappers;
 
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
+import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.options.MapperOpts;
@@ -13,17 +14,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TypeListFieldMapper implements FieldMapper {
+public class LazyListFieldMapper implements FieldMapper {
     private final Field inputField;
     private final Field outputField;
     private final MapperOpts mapperOpts;
     private final TypeConverterPool typeConverterPool;
 
-    public TypeListFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
+    public LazyListFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
         this(in, out, typeConverterPool, MapperOpts.DEFAULT);
     }
 
-    public TypeListFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool, MapperOpts mapperOpts) {
+    public LazyListFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool, MapperOpts mapperOpts) {
         this.inputField = in;
         this.outputField = out;
         this.typeConverterPool = typeConverterPool;
@@ -61,18 +62,22 @@ public class TypeListFieldMapper implements FieldMapper {
             TypeConverter typeConverter = typeConverterPool.get(inputType.getTypeName(), outputType.getTypeName());
 
             if (typeConverter == null) {
-                throw new NoTypeConverterFoundException(inputType.getTypeName(), outputType.getTypeName());
+                typeConverter = new LazyObjectConverter((Class) inputType, (Class) outputType, typeConverterPool);
             }
+
+            TypeConverter finalTypeConverter = typeConverter;
 
             outputValue = inputValue.stream().map(x -> {
                 try {
-                    return typeConverter.convert(x);
+                    return finalTypeConverter.convert(x);
                 } catch (Exception e) {
                     return null;
                 }
             }).collect(Collectors.toList());
             outputField.set(outputObject, outputValue);
         } catch (IndexOutOfBoundsException | IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoZeroArgumentsConstructorFoundException e) {
             e.printStackTrace();
         }
     }
