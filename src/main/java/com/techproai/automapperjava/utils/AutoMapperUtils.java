@@ -4,6 +4,7 @@ import com.techproai.automapperjava.converters.SimpleObjectConverter;
 import com.techproai.automapperjava.exceptions.GetTypeFromFirstElementFailedException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
+import com.techproai.automapperjava.interfaces.AutoMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.pools.TypeConverterPool;
 
@@ -11,7 +12,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AutoMapperUtils {
+/**
+ * use {@link LazyAutoMapperUtils} instead
+ */
+@Deprecated
+public class AutoMapperUtils implements AutoMapper {
 
     private final TypeConverterPool typeConverterPool;
 
@@ -19,15 +24,12 @@ public class AutoMapperUtils {
         this.typeConverterPool = typeConverterPool;
     }
 
-    public void add(Class inputClass, Class outputClass) {
-        try {
-            SimpleObjectConverter simpleObjectConverter = new SimpleObjectConverter(inputClass, outputClass, typeConverterPool);
-            typeConverterPool.add(inputClass, outputClass, x -> simpleObjectConverter.convert(x));
-        } catch (NoZeroArgumentsConstructorFoundException e) {
-            e.printStackTrace();
-        }
+    public <I, O> void add(Class<I> inputClass, Class<O> outputClass) throws NoZeroArgumentsConstructorFoundException {
+        SimpleObjectConverter<I, O> simpleObjectConverter = new SimpleObjectConverter(inputClass, outputClass, typeConverterPool);
+        typeConverterPool.add(inputClass, outputClass, x -> simpleObjectConverter.convert(x));
     }
 
+    @Override
     public <I, O> O convertIgnoreException(I input, Class<O> targetClass) {
         TypeConverter<I, O> typeConverter = (TypeConverter<I, O>) this.typeConverterPool.get(input.getClass(), targetClass);
         if (typeConverter == null) return null;
@@ -38,6 +40,7 @@ public class AutoMapperUtils {
         }
     }
 
+    @Override
     public <I, O> O convert(I input, Class<O> targetClass) throws NoTypeConverterFoundException {
         if (input == null) return null;
         TypeConverter<I, O> typeConverter = (TypeConverter<I, O>) this.typeConverterPool.get(input.getClass(), targetClass);
@@ -47,6 +50,7 @@ public class AutoMapperUtils {
         return typeConverter.convert(input);
     }
 
+    @Override
     public <I, O> List<O> convertList(List<I> input, Class<O> targetClass) throws NoTypeConverterFoundException, GetTypeFromFirstElementFailedException {
         if (input.size() == 0) return new LinkedList<>();
         I firstElement = input.get(0);
@@ -55,7 +59,7 @@ public class AutoMapperUtils {
         }
         TypeConverter<I, O> typeConverter = (TypeConverter<I, O>) this.typeConverterPool.get(firstElement.getClass(), targetClass);
         if (typeConverter == null) {
-            throw new NoTypeConverterFoundException(input.getClass().getName(), targetClass.getName());
+            throw new NoTypeConverterFoundException(firstElement.getClass().getName(), targetClass.getName());
         }
         return input.stream().map(x -> {
             try {
