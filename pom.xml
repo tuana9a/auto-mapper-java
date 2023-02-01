@@ -27,7 +27,7 @@
             <groupId>org.mongodb</groupId>
             <artifactId>bson</artifactId>
             <version>4.8.0</version>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>

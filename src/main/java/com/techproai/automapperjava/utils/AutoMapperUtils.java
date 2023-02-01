@@ -10,7 +10,6 @@ import com.techproai.automapperjava.pools.TypeConverterPool;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * use {@link LazyAutoMapperUtils} instead
@@ -25,7 +24,7 @@ public class AutoMapperUtils implements AutoMapper {
     }
 
     public <I, O> void add(Class<I> inputClass, Class<O> outputClass) throws NoZeroArgumentsConstructorFoundException {
-        SimpleObjectConverter<I, O> simpleObjectConverter = new SimpleObjectConverter(inputClass, outputClass, typeConverterPool);
+        SimpleObjectConverter<I, O> simpleObjectConverter = new SimpleObjectConverter<>(inputClass, outputClass, typeConverterPool);
         typeConverterPool.add(inputClass, outputClass, x -> simpleObjectConverter.convert(x));
     }
 
@@ -51,9 +50,9 @@ public class AutoMapperUtils implements AutoMapper {
     }
 
     @Override
-    public <I, O> List<O> convertList(List<I> input, Class<O> targetClass) throws NoTypeConverterFoundException, GetTypeFromFirstElementFailedException {
-        if (input.size() == 0) return new LinkedList<>();
-        I firstElement = input.get(0);
+    public <I, O> List<O> convertList(List<I> inputs, Class<O> targetClass) throws NoTypeConverterFoundException, GetTypeFromFirstElementFailedException {
+        if (inputs.size() == 0) return new LinkedList<>();
+        I firstElement = inputs.get(0);
         if (firstElement == null) {
             throw new GetTypeFromFirstElementFailedException("first element is null");
         }
@@ -61,12 +60,10 @@ public class AutoMapperUtils implements AutoMapper {
         if (typeConverter == null) {
             throw new NoTypeConverterFoundException(firstElement.getClass().getName(), targetClass.getName());
         }
-        return input.stream().map(x -> {
-            try {
-                return typeConverter.convert(x);
-            } catch (NoTypeConverterFoundException ignored) {
-            }
-            return null;
-        }).collect(Collectors.toList());
+        List<O> outputs = new LinkedList<>();
+        for (I i : inputs) {
+            outputs.add(typeConverter.convert(i));
+        }
+        return outputs;
     }
 }

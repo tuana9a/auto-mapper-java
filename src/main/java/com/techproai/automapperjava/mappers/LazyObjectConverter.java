@@ -47,15 +47,15 @@ public class LazyObjectConverter<I, O> implements TypeConverter<I, O> {
     @Override
     public O convert(I i) throws NoTypeConverterFoundException {
         if (i == null) return null;
-        O o;
         try {
-            o = outputZeroArgsConstructor.newInstance();
+            O o = outputZeroArgsConstructor.newInstance();
             for (FieldMapper fieldMapper : fieldMappers) {
                 fieldMapper.map(i, o);
             }
+            return o;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-        return o;
+        return null;
     }
 }

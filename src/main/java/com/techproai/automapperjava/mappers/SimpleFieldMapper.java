@@ -11,18 +11,12 @@ import java.lang.reflect.Field;
 public class SimpleFieldMapper implements FieldMapper {
     private final Field inputField;
     private final Field outputField;
-    private final MapperOpts mapperOpts;
     private final TypeConverterPool typeConverterPool;
 
     public SimpleFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
-        this(in, out, typeConverterPool, MapperOpts.DEFAULT);
-    }
-
-    public SimpleFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool, MapperOpts mapperOpts) {
         this.inputField = in;
         this.outputField = out;
         this.typeConverterPool = typeConverterPool;
-        this.mapperOpts = mapperOpts;
     }
 
     @Override
@@ -35,7 +29,7 @@ public class SimpleFieldMapper implements FieldMapper {
         try {
             Object inputValue = this.inputField.get(inputObject);
 
-            if (inputValue == null && mapperOpts.ignoreNullInput) {
+            if (inputValue == null) {
                 return;
             }
 

@@ -9,7 +9,7 @@ import java.util.Map;
 public class TypeConverterPool {
     private final String delimiter;
 
-    private final Map<String, TypeConverter<?, ?>> pool;
+    private final Map<String, TypeConverter> pool;
 
     public TypeConverterPool(String delimiter) {
         this.delimiter = delimiter;
@@ -24,11 +24,11 @@ public class TypeConverterPool {
         this.pool.put(iClass.getName() + delimiter + oClass.getName(), typeConverter);
     }
 
-    public TypeConverter<?, ?> get(String iClass, String oClass) {
+    public TypeConverter get(String iClass, String oClass) {
         return this.pool.get(iClass + delimiter + oClass);
     }
 
-    public TypeConverter<?, ?> get(Class<?> iClass, Class<?> oClass) {
+    public <I, O> TypeConverter<I, O> get(Class<I> iClass, Class<O> oClass) {
         return this.pool.get(iClass.getName() + delimiter + oClass.getName());
     }
 }

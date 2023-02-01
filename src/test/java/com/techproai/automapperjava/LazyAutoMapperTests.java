@@ -73,6 +73,5 @@ public class LazyAutoMapperTests {
                 .getTest4()
                 .getTest1()
                 .getName() == 10;
-        System.out.println(autoMapperUtils);
     }
 }

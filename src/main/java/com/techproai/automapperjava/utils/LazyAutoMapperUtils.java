@@ -2,7 +2,6 @@ package com.techproai.automapperjava.utils;
 
 import com.techproai.automapperjava.exceptions.AutoMapperException;
 import com.techproai.automapperjava.exceptions.GetTypeFromFirstElementFailedException;
-import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.AutoMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
@@ -11,7 +10,6 @@ import com.techproai.automapperjava.pools.TypeConverterPool;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class LazyAutoMapperUtils implements AutoMapper {
 
@@ -52,23 +50,20 @@ public class LazyAutoMapperUtils implements AutoMapper {
     }
 
     @Override
-    public <I, O> List<O> convertList(List<I> input, Class<O> targetClass) throws AutoMapperException {
-        if (input.size() == 0) return new LinkedList<>();
-        I firstElement = input.get(0);
+    public <I, O> List<O> convertList(List<I> inputs, Class<O> targetClass) throws AutoMapperException {
+        if (inputs.size() == 0) return new LinkedList<>();
+        I firstElement = inputs.get(0);
         if (firstElement == null) {
-            throw new GetTypeFromFirstElementFailedException("first element is null");
+            throw new GetTypeFromFirstElementFailedException("First element is null");
         }
         TypeConverter<I, O> typeConverter = (TypeConverter<I, O>) this.typeConverterPool.get(firstElement.getClass(), targetClass);
         if (typeConverter == null) {
             typeConverter = this.add((Class<I>) firstElement.getClass(), targetClass);
         }
-        TypeConverter<I, O> finalTypeConverter = typeConverter;
-        return input.stream().map(x -> {
-            try {
-                return finalTypeConverter.convert(x);
-            } catch (AutoMapperException ignored) {
-            }
-            return null;
-        }).collect(Collectors.toList());
+        List<O> outputs = new LinkedList<>();
+        for (I i : inputs) {
+            outputs.add(typeConverter.convert(i));
+        }
+        return outputs;
     }
 }

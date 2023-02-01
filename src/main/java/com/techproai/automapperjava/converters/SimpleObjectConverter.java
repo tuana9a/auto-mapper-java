@@ -5,7 +5,7 @@ import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundEx
 import com.techproai.automapperjava.interfaces.FieldMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.mappers.SimpleFieldMapper;
-import com.techproai.automapperjava.mappers.TypeListFieldMapper;
+import com.techproai.automapperjava.mappers.SimpleListFieldMapper;
 import com.techproai.automapperjava.pools.TypeConverterPool;
 
 import java.lang.reflect.Constructor;
@@ -20,8 +20,10 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
     public SimpleObjectConverter(Class<I> inputClass, Class<O> outputClass, TypeConverterPool typeConverterPool) throws NoZeroArgumentsConstructorFoundException {
         Map<String, Field> inputFields = new HashMap<>();
         Map<String, Field> outputFields = new HashMap<>();
+
         this.fieldMappers = new LinkedList<>();
         this.outputZeroArgsConstructor = (Constructor<O>) Arrays.stream(outputClass.getConstructors()).filter(x -> x.getParameters().length == 0).findFirst().orElseThrow(() -> new NoZeroArgumentsConstructorFoundException(outputClass));
+
         for (Field field : inputClass.getDeclaredFields()) {
             inputFields.put(field.getName(), field);
         }
@@ -36,7 +38,7 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
             Field inputField = inputFields.get(key);
             Field outputField = outputFields.get(key);
             if (inputField.getType().isAssignableFrom(List.class)) {
-                fieldMappers.add(new TypeListFieldMapper(inputField, outputField, typeConverterPool));
+                fieldMappers.add(new SimpleListFieldMapper(inputField, outputField, typeConverterPool));
             } else {
                 fieldMappers.add(new SimpleFieldMapper(inputField, outputField, typeConverterPool));
             }
@@ -46,15 +48,15 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
     @Override
     public O convert(I i) throws NoTypeConverterFoundException {
         if (i == null) return null;
-        O o;
         try {
-            o = outputZeroArgsConstructor.newInstance();
+            O o = outputZeroArgsConstructor.newInstance();
             for (FieldMapper fieldMapper : fieldMappers) {
                 fieldMapper.map(i, o);
             }
+            return o;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-        return o;
+        return null;
     }
 }
