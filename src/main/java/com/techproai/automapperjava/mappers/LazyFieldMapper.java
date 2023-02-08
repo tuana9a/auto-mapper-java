@@ -1,5 +1,6 @@
 package com.techproai.automapperjava.mappers;
 
+import com.techproai.automapperjava.exceptions.MissingTypeException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
@@ -20,7 +21,7 @@ public class LazyFieldMapper implements FieldMapper {
     }
 
     @Override
-    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException {
+    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException, MissingTypeException {
         assert inputObject != null;
         assert outputObject != null;
         inputField.setAccessible(true);
@@ -38,7 +39,7 @@ public class LazyFieldMapper implements FieldMapper {
                 return;
             }
 
-            TypeConverter typeConverter = typeConverterPool.get(inputField.getType().getName(), outputField.getType().getName());
+            TypeConverter typeConverter = typeConverterPool.get(inputField.getType(), outputField.getType());
 
             if (typeConverter == null) {
                 typeConverter = new LazyObjectConverter(inputField.getType(), outputField.getType(), typeConverterPool);

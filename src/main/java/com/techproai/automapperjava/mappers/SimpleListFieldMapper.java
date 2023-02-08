@@ -1,5 +1,6 @@
 package com.techproai.automapperjava.mappers;
 
+import com.techproai.automapperjava.exceptions.MissingTypeException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
@@ -23,7 +24,7 @@ public class SimpleListFieldMapper implements FieldMapper {
     }
 
     @Override
-    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException {
+    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException, MissingTypeException {
         assert inputObject != null;
         assert outputObject != null;
         inputField.setAccessible(true);
@@ -51,7 +52,7 @@ public class SimpleListFieldMapper implements FieldMapper {
                 return;
             }
 
-            TypeConverter typeConverter = typeConverterPool.get(inputType.getTypeName(), outputType.getTypeName());
+            TypeConverter typeConverter = typeConverterPool.get((Class) inputType, (Class) outputType);
 
             if (typeConverter == null) {
                 throw new NoTypeConverterFoundException(inputType.getTypeName(), outputType.getTypeName());

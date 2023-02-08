@@ -1,5 +1,6 @@
 package com.techproai.automapperjava.mappers;
 
+import com.techproai.automapperjava.exceptions.MissingTypeException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
@@ -24,7 +25,7 @@ public class LazyListFieldMapper implements FieldMapper {
     }
 
     @Override
-    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException {
+    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException, MissingTypeException {
         assert inputObject != null;
         assert outputObject != null;
         inputField.setAccessible(true);
@@ -39,12 +40,30 @@ public class LazyListFieldMapper implements FieldMapper {
             }
 
             if (inputValue.size() == 0) {
-                outputField.set(outputObject, outputValue);
+                outputField.set(outputObject, new LinkedList<>());
                 return;
             }
 
-            Type inputType = ((ParameterizedType) inputField.getGenericType()).getActualTypeArguments()[0];
-            Type outputType = ((ParameterizedType) outputField.getGenericType()).getActualTypeArguments()[0];
+            ParameterizedType inputParameterizedType = (ParameterizedType) inputField.getGenericType();
+            ParameterizedType outputParameterizedTypeType = (ParameterizedType) outputField.getGenericType();
+
+            Type[] inputActualTypeArguments = inputParameterizedType.getActualTypeArguments();
+            Type[] outputActualTypeArguments = outputParameterizedTypeType.getActualTypeArguments();
+
+            if (inputActualTypeArguments.length == 0 && outputActualTypeArguments.length == 0) {
+                // no generic found so set output equals to input value
+                outputField.set(outputObject, inputValue);
+                return;
+            }
+
+            if (inputActualTypeArguments.length == 0 || outputActualTypeArguments.length == 0) {
+                // one in two missing generic type
+                throw new MissingTypeException(String.join(".", inputField.getDeclaringClass().getName(), inputField.getName()),
+                        String.join(".", outputField.getDeclaringClass().getName(), outputField.getName()));
+            }
+
+            Type inputType = inputActualTypeArguments[0];
+            Type outputType = outputActualTypeArguments[0];
 
             if (inputType.equals(outputType)) {
                 // each element is the same type
@@ -52,7 +71,7 @@ public class LazyListFieldMapper implements FieldMapper {
                 return;
             }
 
-            TypeConverter typeConverter = typeConverterPool.get(inputType.getTypeName(), outputType.getTypeName());
+            TypeConverter typeConverter = typeConverterPool.get((Class) inputType, (Class) outputType);
 
             if (typeConverter == null) {
                 typeConverter = new LazyObjectConverter((Class) inputType, (Class) outputType, typeConverterPool);
@@ -61,6 +80,7 @@ public class LazyListFieldMapper implements FieldMapper {
             for (Object x : inputValue) {
                 outputValue.add(typeConverter.convert(x));
             }
+
             outputField.set(outputObject, outputValue);
         } catch (IndexOutOfBoundsException | IllegalAccessException | NoZeroArgumentsConstructorFoundException e) {
             e.printStackTrace();

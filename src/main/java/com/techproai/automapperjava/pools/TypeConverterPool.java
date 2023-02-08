@@ -17,18 +17,27 @@ public class TypeConverterPool {
     }
 
     public TypeConverterPool() {
-        this(AutoMapperConstants.DEFAULT_DELIMITER);
+        this(AutoMapperConstants.DELIMITER);
     }
 
-    public <I, O> void add(Class<I> iClass, Class<O> oClass, TypeConverter<I, O> typeConverter) {
-        this.pool.put(iClass.getName() + delimiter + oClass.getName(), typeConverter);
+    public <I, O> void add(Class<I> inputClass, Class<O> outputClass, TypeConverter<I, O> typeConverter) {
+        this.pool.put(String.join(delimiter, inputClass.getName(), outputClass.getName()), typeConverter);
     }
 
-    public TypeConverter get(String iClass, String oClass) {
-        return this.pool.get(iClass + delimiter + oClass);
+    public <I, O> void add(String inputClass, String outputClass, TypeConverter<I, O> typeConverter) {
+        this.pool.put(String.join(delimiter, inputClass, outputClass), typeConverter);
     }
 
-    public <I, O> TypeConverter<I, O> get(Class<I> iClass, Class<O> oClass) {
-        return this.pool.get(iClass.getName() + delimiter + oClass.getName());
+    public <I, O> TypeConverter<I, O> get(String inputClass, String outputClass) {
+        TypeConverter typeConverter = this.pool.get(String.join(delimiter, inputClass, outputClass));
+        if (typeConverter != null) return typeConverter;
+        typeConverter = this.pool.get(String.join(delimiter, inputClass, AutoMapperConstants.ASTERISK));
+        if (typeConverter != null) return typeConverter;
+        typeConverter = this.pool.get(String.join(delimiter, AutoMapperConstants.ASTERISK, outputClass));
+        return typeConverter;
+    }
+
+    public <I, O> TypeConverter<I, O> get(Class<I> inputClass, Class<O> outputClass) {
+        return this.get(inputClass.getName(), outputClass.getName());
     }
 }

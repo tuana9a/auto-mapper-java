@@ -1,5 +1,6 @@
 package com.techproai.automapperjava.mappers;
 
+import com.techproai.automapperjava.exceptions.MissingTypeException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
@@ -45,7 +46,7 @@ public class LazyObjectConverter<I, O> implements TypeConverter<I, O> {
     }
 
     @Override
-    public O convert(I i) throws NoTypeConverterFoundException {
+    public O convert(I i) throws NoTypeConverterFoundException, MissingTypeException {
         if (i == null) return null;
         try {
             O o = outputZeroArgsConstructor.newInstance();

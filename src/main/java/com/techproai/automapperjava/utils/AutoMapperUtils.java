@@ -1,9 +1,7 @@
 package com.techproai.automapperjava.utils;
 
 import com.techproai.automapperjava.converters.SimpleObjectConverter;
-import com.techproai.automapperjava.exceptions.GetTypeFromFirstElementFailedException;
-import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
-import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
+import com.techproai.automapperjava.exceptions.*;
 import com.techproai.automapperjava.interfaces.AutoMapper;
 import com.techproai.automapperjava.interfaces.TypeConverter;
 import com.techproai.automapperjava.pools.TypeConverterPool;
@@ -34,13 +32,13 @@ public class AutoMapperUtils implements AutoMapper {
         if (typeConverter == null) return null;
         try {
             return typeConverter.convert(input);
-        } catch (NoTypeConverterFoundException e) {
+        } catch (NoTypeConverterFoundException | MissingTypeException e) {
             return null;
         }
     }
 
     @Override
-    public <I, O> O convert(I input, Class<O> targetClass) throws NoTypeConverterFoundException {
+    public <I, O> O convert(I input, Class<O> targetClass) throws NoTypeConverterFoundException, MissingTypeException {
         if (input == null) return null;
         TypeConverter<I, O> typeConverter = (TypeConverter<I, O>) this.typeConverterPool.get(input.getClass(), targetClass);
         if (typeConverter == null) {
@@ -50,7 +48,7 @@ public class AutoMapperUtils implements AutoMapper {
     }
 
     @Override
-    public <I, O> List<O> convertList(List<I> inputs, Class<O> targetClass) throws NoTypeConverterFoundException, GetTypeFromFirstElementFailedException {
+    public <I, O> List<O> convertList(List<I> inputs, Class<O> targetClass) throws AutoMapperException {
         if (inputs.size() == 0) return new LinkedList<>();
         I firstElement = inputs.get(0);
         if (firstElement == null) {

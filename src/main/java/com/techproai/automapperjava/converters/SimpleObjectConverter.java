@@ -1,5 +1,6 @@
 package com.techproai.automapperjava.converters;
 
+import com.techproai.automapperjava.exceptions.MissingTypeException;
 import com.techproai.automapperjava.exceptions.NoTypeConverterFoundException;
 import com.techproai.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
 import com.techproai.automapperjava.interfaces.FieldMapper;
@@ -37,7 +38,8 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
         for (String key : keys) {
             Field inputField = inputFields.get(key);
             Field outputField = outputFields.get(key);
-            if (inputField.getType().isAssignableFrom(List.class)) {
+            if (List.class.isAssignableFrom(inputField.getType())) {
+                // if list can assign from field.type mean field.type is subclass of list, only subclass of list can assign to list
                 fieldMappers.add(new SimpleListFieldMapper(inputField, outputField, typeConverterPool));
             } else {
                 fieldMappers.add(new SimpleFieldMapper(inputField, outputField, typeConverterPool));
@@ -46,7 +48,7 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
     }
 
     @Override
-    public O convert(I i) throws NoTypeConverterFoundException {
+    public O convert(I i) throws NoTypeConverterFoundException, MissingTypeException {
         if (i == null) return null;
         try {
             O o = outputZeroArgsConstructor.newInstance();
@@ -54,9 +56,8 @@ public class SimpleObjectConverter<I, O> implements TypeConverter<I, O> {
                 fieldMapper.map(i, o);
             }
             return o;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        return null;
     }
 }
