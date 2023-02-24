@@ -1,11 +1,12 @@
 package com.tuana9a.automapperjava.mappers;
 
+import com.tuana9a.automapperjava.auto.LazyObjectAutoMapper;
+import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.exceptions.MissingTypeException;
-import com.tuana9a.automapperjava.exceptions.NoTypeConverterFoundException;
-import com.tuana9a.automapperjava.exceptions.NoZeroArgumentsConstructorFoundException;
+import com.tuana9a.automapperjava.exceptions.NoTypeMapperFoundException;
+import com.tuana9a.automapperjava.exceptions.ZeroArgumentsConstructorNotFoundException;
 import com.tuana9a.automapperjava.interfaces.FieldMapper;
 import com.tuana9a.automapperjava.interfaces.TypeConverter;
-import com.tuana9a.automapperjava.pools.TypeConverterPool;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -16,16 +17,14 @@ import java.util.List;
 public class LazyListFieldMapper implements FieldMapper {
     private final Field inputField;
     private final Field outputField;
-    private final TypeConverterPool typeConverterPool;
 
-    public LazyListFieldMapper(Field in, Field out, TypeConverterPool typeConverterPool) {
+    public LazyListFieldMapper(Field in, Field out) {
         this.inputField = in;
         this.outputField = out;
-        this.typeConverterPool = typeConverterPool;
     }
 
     @Override
-    public void map(Object inputObject, Object outputObject) throws NoTypeConverterFoundException, MissingTypeException {
+    public void map(Object inputObject, Object outputObject) throws NoTypeMapperFoundException, MissingTypeException {
         assert inputObject != null;
         assert outputObject != null;
         inputField.setAccessible(true);
@@ -71,18 +70,18 @@ public class LazyListFieldMapper implements FieldMapper {
                 return;
             }
 
-            TypeConverter typeConverter = typeConverterPool.get((Class) inputType, (Class) outputType);
+            TypeConverter converter = TypeConverterDb.getInstance().get((Class) inputType, (Class) outputType);
 
-            if (typeConverter == null) {
-                typeConverter = new LazyObjectConverter((Class) inputType, (Class) outputType, typeConverterPool);
+            if (converter == null) {
+                converter = new LazyObjectAutoMapper((Class) inputType, (Class) outputType);
             }
 
             for (Object x : inputValue) {
-                outputValue.add(typeConverter.convert(x));
+                outputValue.add(converter.convert(x));
             }
 
             outputField.set(outputObject, outputValue);
-        } catch (IndexOutOfBoundsException | IllegalAccessException | NoZeroArgumentsConstructorFoundException e) {
+        } catch (IndexOutOfBoundsException | IllegalAccessException | ZeroArgumentsConstructorNotFoundException e) {
             e.printStackTrace();
         }
     }
