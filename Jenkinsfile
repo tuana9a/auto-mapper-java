@@ -10,13 +10,6 @@ pipeline {
         GPG_PASSPHRASE = credentials("gpg-passphrase")
     }
     stages {
-        stage("Build") {
-            steps {
-                script {
-                    sh "mvn package"
-                }
-            }
-        }
         stage("Deploy") {
             steps {
                 script {
