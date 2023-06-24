@@ -6,40 +6,20 @@ import com.tuana9a.automapperjava.db.ZeroArgsConstructorDb;
 import com.tuana9a.automapperjava.exceptions.MissingTypeException;
 import com.tuana9a.automapperjava.exceptions.NoTypeMapperFoundException;
 import com.tuana9a.automapperjava.exceptions.ZeroArgumentsConstructorNotFoundException;
-import com.tuana9a.automapperjava.interfaces.FieldMapper;
 import com.tuana9a.automapperjava.interfaces.TypeConverter;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
 
-public class LazyListFieldMapper implements FieldMapper {
-    private Field inputField;
-    private Field outputField;
-    private final TypeMapperDb typeMapperDb;
-    private final TypeConverterDb typeConverterDb;
-    private final ZeroArgsConstructorDb zeroArgsConstructorDb;
-
+public class LazyListFieldMapper extends LazyFieldMapper {
     public LazyListFieldMapper() {
-        this(TypeMapperDb.getInstance(), TypeConverterDb.getInstance(), ZeroArgsConstructorDb.getInstance());
+        super(TypeMapperDb.getInstance(), TypeConverterDb.getInstance(), ZeroArgsConstructorDb.getInstance());
     }
 
     public LazyListFieldMapper(TypeMapperDb typeMapperDb, TypeConverterDb typeConverterDb, ZeroArgsConstructorDb zeroArgsConstructorDb) {
-        this.typeMapperDb = typeMapperDb;
-        this.typeConverterDb = typeConverterDb;
-        this.zeroArgsConstructorDb = zeroArgsConstructorDb;
-    }
-
-    public LazyListFieldMapper in(Field in) {
-        this.inputField = in;
-        return this;
-    }
-
-    public LazyListFieldMapper out(Field out) {
-        this.outputField = out;
-        return this;
+        super(typeMapperDb, typeConverterDb, zeroArgsConstructorDb);
     }
 
     @Override
@@ -54,6 +34,9 @@ public class LazyListFieldMapper implements FieldMapper {
             List outputValue = new LinkedList<>();
 
             if (inputValue == null) {
+                if (opts.allowNull) {
+                    outputField.set(outputObject, null);
+                }
                 return;
             }
 
@@ -92,7 +75,7 @@ public class LazyListFieldMapper implements FieldMapper {
             TypeConverter converter = this.typeConverterDb.get((Class) inputType, (Class) outputType);
 
             if (converter == null) {
-                converter = new LazyObjectAutoMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).parse((Class) inputType, (Class) outputType);
+                converter = new LazyObjectAutoMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).opts(opts).parse((Class) inputType, (Class) outputType);
             }
 
             for (Object x : inputValue) {

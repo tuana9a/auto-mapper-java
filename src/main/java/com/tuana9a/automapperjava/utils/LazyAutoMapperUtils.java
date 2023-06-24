@@ -1,5 +1,7 @@
 package com.tuana9a.automapperjava.utils;
 
+import com.tuana9a.automapperjava.configs.AutoMapperConstants;
+import com.tuana9a.automapperjava.configs.AutoMapperOpts;
 import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.db.TypeMapperDb;
 import com.tuana9a.automapperjava.db.ZeroArgsConstructorDb;
@@ -31,6 +33,16 @@ public class LazyAutoMapperUtils implements AutoMapper {
     @Getter
     private final ZeroArgsConstructorDb zeroArgsConstructorDb;
 
+    private AutoMapperOpts opts;
+
+    public void initDefaultMapper() {
+        typeConverterDb.update(AutoMapperConstants.ASTERISK, String.class.getName(), x -> x == null ? null : String.valueOf(x));
+        typeConverterDb.update(String.class, Integer.class, x -> x == null ? null : Integer.parseInt(x));
+        typeConverterDb.update(String.class, Long.class, x -> x == null ? null : Long.parseLong(x));
+        typeConverterDb.update(String.class, Float.class, x -> x == null ? null : Float.parseFloat(x));
+        typeConverterDb.update(String.class, Double.class, x -> x == null ? null : Double.parseDouble(x));
+    }
+
     public LazyAutoMapperUtils() {
         this(TypeMapperDb.getInstance(), TypeConverterDb.getInstance(), ZeroArgsConstructorDb.getInstance());
     }
@@ -39,10 +51,16 @@ public class LazyAutoMapperUtils implements AutoMapper {
         this.typeMapperDb = typeMapperDb;
         this.typeConverterDb = typeConverterDb;
         this.zeroArgsConstructorDb = zeroArgsConstructorDb;
+        this.opts = AutoMapperOpts.DEFAULT;
+    }
+
+    public LazyAutoMapperUtils opts(AutoMapperOpts opts) {
+        this.opts = opts;
+        return this;
     }
 
     public <I, O> LazyObjectAutoMapper<I, O> add(Class<I> inputClass, Class<O> outputClass) throws ZeroArgumentsConstructorNotFoundException {
-        return new LazyObjectAutoMapper<I, O>(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).parse(inputClass, outputClass);
+        return new LazyObjectAutoMapper<I, O>(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).opts(opts).parse(inputClass, outputClass);
     }
 
     @Override

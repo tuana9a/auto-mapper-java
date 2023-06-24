@@ -1,5 +1,6 @@
 package com.tuana9a.automapperjava.mappers;
 
+import com.tuana9a.automapperjava.configs.AutoMapperOpts;
 import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.db.TypeMapperDb;
 import com.tuana9a.automapperjava.db.ZeroArgsConstructorDb;
@@ -21,6 +22,7 @@ public class LazyObjectAutoMapper<I, O> implements TypeMapper<I, O>, TypeConvert
     private final TypeMapperDb typeMapperDb;
     private final TypeConverterDb typeConverterDb;
     private final ZeroArgsConstructorDb zeroArgsConstructorDb;
+    private AutoMapperOpts opts;
 
     public LazyObjectAutoMapper() {
         this(TypeMapperDb.getInstance(), TypeConverterDb.getInstance(), ZeroArgsConstructorDb.getInstance());
@@ -30,6 +32,12 @@ public class LazyObjectAutoMapper<I, O> implements TypeMapper<I, O>, TypeConvert
         this.typeMapperDb = typeMapperDb;
         this.typeConverterDb = typeConverterDb;
         this.zeroArgsConstructorDb = zeroArgsConstructorDb;
+        this.opts = AutoMapperOpts.DEFAULT;
+    }
+
+    public LazyObjectAutoMapper<I, O> opts(AutoMapperOpts opts) {
+        this.opts = opts;
+        return this;
     }
 
     public LazyObjectAutoMapper<I, O> parse(Class<I> inputClass, Class<O> outputClass) throws ZeroArgumentsConstructorNotFoundException {
@@ -52,10 +60,10 @@ public class LazyObjectAutoMapper<I, O> implements TypeMapper<I, O>, TypeConvert
         for (String key : keys) {
             Field inputField = inputFields.get(key);
             Field outputField = outputFields.get(key);
-            if (List.class.isAssignableFrom(inputField.getType())) { // if field can be assign to type List -> then it a child of List
-                fieldMappers.add(new LazyListFieldMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).in(inputField).out(outputField));
+            if (List.class.isAssignableFrom(inputField.getType())) { // if field can be assigned to type List -> then it a child of List
+                fieldMappers.add(new LazyListFieldMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).in(inputField).out(outputField).opts(opts));
             } else {
-                fieldMappers.add(new LazyFieldMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).in(inputField).out(outputField));
+                fieldMappers.add(new LazyFieldMapper(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).in(inputField).out(outputField).opts(opts));
             }
         }
 
