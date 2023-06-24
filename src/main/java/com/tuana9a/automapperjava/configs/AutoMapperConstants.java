@@ -1,4 +1,4 @@
-package com.tuana9a.automapperjava.common;
+package com.tuana9a.automapperjava.configs;
 
 public class AutoMapperConstants {
     public static final String DELIMITER = ":";

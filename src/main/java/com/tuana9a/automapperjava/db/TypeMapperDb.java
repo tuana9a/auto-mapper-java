@@ -1,6 +1,6 @@
 package com.tuana9a.automapperjava.db;
 
-import com.tuana9a.automapperjava.common.AutoMapperConstants;
+import com.tuana9a.automapperjava.configs.AutoMapperConstants;
 import com.tuana9a.automapperjava.interfaces.TypeMapper;
 
 import java.util.HashMap;

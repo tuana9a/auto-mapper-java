@@ -1,6 +1,6 @@
 package com.tuana9a.automapperjava;
 
-import com.tuana9a.automapperjava.common.AutoMapperConstants;
+import com.tuana9a.automapperjava.configs.AutoMapperConstants;
 import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.exceptions.AutoMapperException;
 import com.tuana9a.automapperjava.utils.LazyAutoMapperUtils;
@@ -14,14 +14,13 @@ import java.util.List;
 public class LazyAutoMapperTests {
     @Test
     public void testMapper() throws AutoMapperException {
-        TypeConverterDb typeConverterDb = TypeConverterDb.getInstance();
+        LazyAutoMapperUtils autoMapperUtils = LazyAutoMapperUtils.getInstance();
+        TypeConverterDb typeConverterDb = autoMapperUtils.getTypeConverterDb();
         typeConverterDb.update(AutoMapperConstants.ASTERISK, String.class.getName(), x -> x == null ? null : String.valueOf(x));
         typeConverterDb.update(String.class, ObjectId.class, x -> Utils.toObjectId(x));
         typeConverterDb.update(String.class, Integer.class, x -> x == null ? null : Integer.parseInt(x));
         typeConverterDb.update(String.class, Long.class, x -> x == null ? null : Long.parseLong(x));
         typeConverterDb.update(String.class, Double.class, x -> x == null ? null : Double.parseDouble(x));
-
-        LazyAutoMapperUtils autoMapperUtils = LazyAutoMapperUtils.getInstance();
 
         Samples.Person person = new Samples.Person();
         person.setAge(10);
@@ -79,14 +78,13 @@ public class LazyAutoMapperTests {
 
     @Test
     public void testConverter() throws AutoMapperException {
-        TypeConverterDb typeConverterDb = TypeConverterDb.getInstance();
+        LazyAutoMapperUtils autoMapperUtils = LazyAutoMapperUtils.getInstance();
+        TypeConverterDb typeConverterDb = autoMapperUtils.getTypeConverterDb();
         typeConverterDb.update(AutoMapperConstants.ASTERISK, String.class.getName(), x -> x == null ? null : String.valueOf(x));
         typeConverterDb.update(String.class, ObjectId.class, x -> Utils.toObjectId(x));
         typeConverterDb.update(String.class, Integer.class, x -> x == null ? null : Integer.parseInt(x));
         typeConverterDb.update(String.class, Long.class, x -> x == null ? null : Long.parseLong(x));
         typeConverterDb.update(String.class, Double.class, x -> x == null ? null : Double.parseDouble(x));
-
-        LazyAutoMapperUtils autoMapperUtils = LazyAutoMapperUtils.getInstance();
 
         Samples.Person person = new Samples.Person();
         person.setAge(10);

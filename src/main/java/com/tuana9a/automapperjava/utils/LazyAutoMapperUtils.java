@@ -1,14 +1,16 @@
 package com.tuana9a.automapperjava.utils;
 
-import com.tuana9a.automapperjava.auto.LazyObjectAutoMapper;
 import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.db.TypeMapperDb;
+import com.tuana9a.automapperjava.db.ZeroArgsConstructorDb;
 import com.tuana9a.automapperjava.exceptions.AutoMapperException;
 import com.tuana9a.automapperjava.exceptions.FailedToGetFirstElementTypeException;
 import com.tuana9a.automapperjava.exceptions.ZeroArgumentsConstructorNotFoundException;
 import com.tuana9a.automapperjava.interfaces.AutoMapper;
 import com.tuana9a.automapperjava.interfaces.TypeConverter;
 import com.tuana9a.automapperjava.interfaces.TypeMapper;
+import com.tuana9a.automapperjava.mappers.LazyObjectAutoMapper;
+import lombok.Getter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,19 +22,34 @@ public class LazyAutoMapperUtils implements AutoMapper {
         return INSTANCE;
     }
 
+    @Getter
+    private final TypeMapperDb typeMapperDb;
+
+    @Getter
+    private final TypeConverterDb typeConverterDb;
+
+    @Getter
+    private final ZeroArgsConstructorDb zeroArgsConstructorDb;
+
     public LazyAutoMapperUtils() {
+        this(TypeMapperDb.getInstance(), TypeConverterDb.getInstance(), ZeroArgsConstructorDb.getInstance());
+    }
+
+    public LazyAutoMapperUtils(TypeMapperDb typeMapperDb, TypeConverterDb typeConverterDb, ZeroArgsConstructorDb zeroArgsConstructorDb) {
+        this.typeMapperDb = typeMapperDb;
+        this.typeConverterDb = typeConverterDb;
+        this.zeroArgsConstructorDb = zeroArgsConstructorDb;
     }
 
     public <I, O> LazyObjectAutoMapper<I, O> add(Class<I> inputClass, Class<O> outputClass) throws ZeroArgumentsConstructorNotFoundException {
-        LazyObjectAutoMapper<I, O> lazyObjectConverter = new LazyObjectAutoMapper<>(inputClass, outputClass);
-        return lazyObjectConverter;
+        return new LazyObjectAutoMapper<I, O>(typeMapperDb, typeConverterDb, zeroArgsConstructorDb).parse(inputClass, outputClass);
     }
 
     @Override
     public <I, O> O convertIgnoreException(I input, Class<O> targetClass) {
         if (input == null) return null;
         try {
-            TypeConverter<I, O> converter = (TypeConverter<I, O>) TypeConverterDb.getInstance().get(input.getClass(), targetClass);
+            TypeConverter<I, O> converter = (TypeConverter<I, O>) this.typeConverterDb.get(input.getClass(), targetClass);
             if (converter == null) {
                 converter = this.add((Class<I>) input.getClass(), targetClass);
                 return converter.convert(input);
@@ -45,7 +62,7 @@ public class LazyAutoMapperUtils implements AutoMapper {
     @Override
     public <I, O> O convert(I input, Class<O> targetClass) throws AutoMapperException {
         if (input == null) return null;
-        TypeConverter<I, O> converter = (TypeConverter<I, O>) TypeConverterDb.getInstance().get(input.getClass(), targetClass);
+        TypeConverter<I, O> converter = (TypeConverter<I, O>) this.typeConverterDb.get(input.getClass(), targetClass);
         if (converter == null) {
             converter = this.add((Class<I>) input.getClass(), targetClass);
         }
@@ -59,7 +76,7 @@ public class LazyAutoMapperUtils implements AutoMapper {
         if (firstElement == null) {
             throw new FailedToGetFirstElementTypeException("First element is null");
         }
-        TypeConverter<I, O> converter = (TypeConverter<I, O>) TypeConverterDb.getInstance().get(firstElement.getClass(), targetClass);
+        TypeConverter<I, O> converter = (TypeConverter<I, O>) this.typeConverterDb.get(firstElement.getClass(), targetClass);
         if (converter == null) {
             converter = this.add((Class<I>) firstElement.getClass(), targetClass);
         }
@@ -75,7 +92,7 @@ public class LazyAutoMapperUtils implements AutoMapper {
         if (input == null) return null;
         Class targetClass = output.getClass();
         try {
-            TypeMapper<I, O> mapper = (TypeMapper<I, O>) TypeMapperDb.getInstance().get(input.getClass(), targetClass);
+            TypeMapper<I, O> mapper = (TypeMapper<I, O>) this.typeMapperDb.get(input.getClass(), targetClass);
             if (mapper == null) {
                 mapper = this.add((Class<I>) input.getClass(), targetClass);
                 return mapper.map(input, output);
@@ -89,7 +106,7 @@ public class LazyAutoMapperUtils implements AutoMapper {
     public <I, O> O map(I input, O output) throws AutoMapperException {
         if (input == null) return null;
         Class targetClass = output.getClass();
-        TypeMapper<I, O> mapper = (TypeMapper<I, O>) TypeMapperDb.getInstance().get(input.getClass(), targetClass);
+        TypeMapper<I, O> mapper = (TypeMapper<I, O>) this.typeMapperDb.get(input.getClass(), targetClass);
         if (mapper == null) {
             mapper = this.add((Class<I>) input.getClass(), targetClass);
         }
