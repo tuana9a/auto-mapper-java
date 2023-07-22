@@ -5,15 +5,76 @@ import com.tuana9a.automapperjava.configs.AutoMapperOpts;
 import com.tuana9a.automapperjava.db.TypeConverterDb;
 import com.tuana9a.automapperjava.exceptions.AutoMapperException;
 import com.tuana9a.automapperjava.utils.LazyAutoMapperUtils;
+import lombok.Getter;
+import lombok.Setter;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
-import static com.tuana9a.automapperjava.Samples.*;
 
 public class LazyAutoMapperTests {
+
+    @Getter
+    @Setter
+    public static class Person {
+        private String name;
+        private Integer age;
+    }
+
+    @Getter
+    @Setter
+    public static class Person1 {
+        private String name;
+        private Integer age;
+    }
+
+    @Getter
+    @Setter
+    public static class Person2 {
+        private Integer name;
+        private String age;
+    }
+
+    @Getter
+    @Setter
+    public static class Person3 {
+        private ObjectId id;
+        private Person person;
+    }
+
+    @Getter
+    @Setter
+    public static class Person4 {
+        private String id;
+        private Person2 person;
+    }
+
+    @Getter
+    @Setter
+    public static class Person5 {
+        private Person3 person;
+    }
+
+    @Getter
+    @Setter
+    public static class Person6 {
+        private Person4 person;
+    }
+
+    @Getter
+    @Setter
+    public static class Family {
+        private List<Person5> list;
+    }
+
+    @Getter
+    @Setter
+    public static class Family1 {
+        private List<Person6> list;
+    }
+
     @Test
     public void testMapper() throws AutoMapperException {
         LazyAutoMapperUtils autoMapperUtils = LazyAutoMapperUtils.getInstance();
